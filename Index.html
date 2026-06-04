@@ -1,0 +1,311 @@
+<!DOCTYPE html>
+<html lang="de">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Myriams Tagesplan</title>
+<link href="https://fonts.googleapis.com/css2?family=Playfair+Display:wght@400;600;700&family=DM+Sans:wght@300;400;500&display=swap" rel="stylesheet">
+<style>
+  :root {
+    --sage: #6B8F71;
+    --sage-light: #A8C5AC;
+    --sage-dark: #3D5C42;
+    --cream: #FAF7F2;
+    --warm: #F0EAE0;
+    --gold: #C9A84C;
+    --text: #2C2C2C;
+    --text-light: #6B6B6B;
+    --red-soft: #E8726A;
+    --white: #FFFFFF;
+    --shadow: 0 4px 24px rgba(0,0,0,0.08);
+    --radius: 16px;
+  }
+  * { margin: 0; padding: 0; box-sizing: border-box; }
+  body { font-family: 'DM Sans', sans-serif; background: var(--cream); color: var(--text); min-height: 100vh; padding-bottom: 40px; }
+
+  .header {
+    background: linear-gradient(135deg, var(--sage-dark) 0%, var(--sage) 60%, var(--sage-light) 100%);
+    padding: 32px 20px 28px; text-align: center; position: relative; overflow: hidden;
+  }
+  .header h1 { font-family: 'Playfair Display', serif; font-size: 26px; color: white; position: relative; }
+  .header .subtitle { color: rgba(255,255,255,0.75); font-size: 13px; margin-top: 4px; font-weight: 300; position: relative; }
+  .date-badge { display: inline-block; background: rgba(255,255,255,0.15); border: 1px solid rgba(255,255,255,0.25); color: white; font-size: 12px; padding: 4px 14px; border-radius: 20px; margin-top: 10px; position: relative; }
+
+  .progress-wrap { background: var(--warm); padding: 16px 20px; border-bottom: 1px solid rgba(0,0,0,0.06); }
+  .progress-label { display: flex; justify-content: space-between; font-size: 12px; color: var(--text-light); margin-bottom: 8px; }
+  .progress-bar { height: 8px; background: rgba(0,0,0,0.08); border-radius: 10px; overflow: hidden; }
+  .progress-fill { height: 100%; background: linear-gradient(90deg, var(--sage), var(--gold)); border-radius: 10px; transition: width 0.5s ease; }
+
+  .content { padding: 16px 16px 0; max-width: 480px; margin: 0 auto; }
+
+  .block { background: white; border-radius: var(--radius); margin-bottom: 14px; box-shadow: var(--shadow); overflow: hidden; }
+  .block-header { display: flex; align-items: center; gap: 10px; padding: 14px 16px 10px; border-bottom: 1px solid rgba(0,0,0,0.05); }
+  .block-icon { width: 36px; height: 36px; border-radius: 10px; display: flex; align-items: center; justify-content: center; font-size: 18px; flex-shrink: 0; }
+  .block-title { font-family: 'Playfair Display', serif; font-size: 15px; font-weight: 600; }
+  .block-time { font-size: 11px; color: var(--text-light); font-weight: 300; margin-top: 1px; }
+
+  .item { display: flex; align-items: flex-start; gap: 12px; padding: 11px 16px; border-bottom: 1px solid rgba(0,0,0,0.04); cursor: pointer; transition: background 0.15s; -webkit-tap-highlight-color: transparent; }
+  .item:last-child { border-bottom: none; }
+  .item.done { opacity: 0.5; }
+  .item.done .item-name { text-decoration: line-through; }
+  .checkbox { width: 22px; height: 22px; border-radius: 6px; border: 2px solid #DDD; display: flex; align-items: center; justify-content: center; flex-shrink: 0; margin-top: 1px; transition: all 0.2s; }
+  .item.done .checkbox { background: var(--sage); border-color: var(--sage); }
+  .checkbox-check { color: white; font-size: 13px; display: none; }
+  .item.done .checkbox-check { display: block; }
+  .item-body { flex: 1; }
+  .item-name { font-size: 14px; font-weight: 500; }
+  .item-detail { font-size: 12px; color: var(--text-light); margin-top: 2px; font-weight: 300; }
+
+  .warning-box { margin: 0 16px 12px; padding: 8px 10px; border-radius: 0 8px 8px 0; font-size: 11px; }
+  .warning-red { background: #FFF3F3; border-left: 3px solid var(--red-soft); color: #C4534A; font-weight: 600; }
+  .warning-blue { background: #F0F4FF; border-left: 3px solid #6A8DB5; color: #3A5A80; }
+
+  .meal-wrap { padding: 0 16px 14px; }
+  .meal-inner { border-radius: 10px; padding: 12px; }
+  .meal-label { font-size: 11px; font-weight: 600; text-transform: uppercase; letter-spacing: 0.5px; margin-bottom: 6px; }
+  .meal-item { display: flex; align-items: center; gap: 8px; padding: 3px 0; font-size: 13px; }
+  .meal-dot { width: 6px; height: 6px; border-radius: 50%; flex-shrink: 0; }
+  .meal-tip { margin-top: 8px; font-size: 11px; font-style: italic; opacity: 0.75; }
+
+  .badge { font-size: 10px; padding: 2px 8px; border-radius: 10px; font-weight: 500; flex-shrink: 0; margin-top: 3px; }
+  .badge-red { background: #E8726A; color: white; }
+  .badge-blue { background: #6A8DB5; color: white; }
+  .badge-purple { background: #9B7FC2; color: white; }
+
+  .reset-wrap { text-align: center; padding: 20px; }
+  .reset-btn { background: none; border: 1px solid var(--sage-light); color: var(--sage-dark); padding: 10px 24px; border-radius: 20px; font-size: 13px; font-family: 'DM Sans', sans-serif; cursor: pointer; transition: all 0.2s; }
+  .reset-btn:hover { background: var(--sage); color: white; border-color: var(--sage); }
+
+  .hinweis { background: var(--warm); border-radius: var(--radius); padding: 14px 16px; margin-bottom: 14px; font-size: 12px; color: var(--text-light); text-align: center; line-height: 1.5; }
+  .hinweis strong { color: var(--sage-dark); }
+
+  .ai-badge { background: linear-gradient(135deg, #9B7FC2, #6A8DB5); color: white; font-size: 10px; padding: 2px 8px; border-radius: 10px; margin-left: 8px; font-weight: 500; }
+</style>
+</head>
+<body>
+
+<div class="header">
+  <h1>🌿 Myriams Tagesplan</h1>
+  <div class="subtitle">Supplements · Metformin · Ernährung · Acne Inversa</div>
+  <div class="date-badge" id="dateDisplay">Laden...</div>
+</div>
+
+<div class="progress-wrap">
+  <div class="progress-label">
+    <span>Tagesfortschritt</span>
+    <span id="progressText">0 / 0 erledigt</span>
+  </div>
+  <div class="progress-bar">
+    <div class="progress-fill" id="progressFill" style="width:0%"></div>
+  </div>
+</div>
+
+<div class="content" id="app"></div>
+
+<script>
+const STORAGE_KEY = 'myriam_plan_v2_' + new Date().toDateString();
+const lastDate = localStorage.getItem('myriam_last_date_v2');
+const today = new Date().toDateString();
+let state = {};
+
+if (lastDate !== today) {
+  localStorage.setItem('myriam_last_date_v2', today);
+  localStorage.setItem(STORAGE_KEY, '{}');
+} else {
+  state = JSON.parse(localStorage.getItem(STORAGE_KEY) || '{}');
+}
+
+function saveState() { localStorage.setItem(STORAGE_KEY, JSON.stringify(state)); }
+
+const plan = [
+  {
+    id: 'nuechtern',
+    icon: '🌅',
+    title: 'Morgens – Nüchtern',
+    time: 'Vor dem Frühstück',
+    bg: '#FFF8E8',
+    items: [
+      { id: 'n1', name: 'L-Glutamin', detail: '5g Pulver in einem Glas Wasser – nüchtern, vor dem Shake' },
+    ]
+  },
+  {
+    id: 'fruehstueck',
+    icon: '☕',
+    title: 'Frühstück / Shake',
+    time: 'ca. 8–9 Uhr',
+    bg: '#FFF8E8',
+    items: [
+      { id: 'f1', name: 'Protein-Shake', detail: 'Mit ungesüßter Mandelmilch + Chia + Flohsamen' },
+      { id: 'f2', name: 'D3/K2 5.000 IE', detail: '1 Tablette – fettlöslich, zum Shake optimal' },
+      { id: 'f3', name: 'Zink 25mg (1/3)', detail: '1 Tablette zum Frühstück – niemals nüchtern!' },
+    ],
+    meal: { color: '#C9A84C', label: 'Frühstück-Tipp', items: ['Shake + Chia + Flohsamen', 'Kein Zucker, kein Weizen'], tip: 'Zink immer zum Essen – nie nüchtern (Übelkeit)' }
+  },
+  {
+    id: 'metformin1',
+    icon: '💊',
+    title: 'Metformin – 1. Einnahme',
+    time: 'Zum Frühstück oder danach',
+    bg: '#FFF8E8',
+    warning: { type: 'red', text: '⚠️ Immer zum Essen · Niemals nüchtern · Überweisung Endokrinologe anstreben' },
+    items: [
+      { id: 'm1', name: 'Metformin 500mg', detail: 'Zum Frühstück – mit einem großen Glas Wasser', badge: 'red', badgeText: 'Selbst gekauft' },
+    ]
+  },
+  {
+    id: 'novalgin1',
+    icon: '💊',
+    title: 'Novalgin – 1. Einnahme',
+    time: 'ca. 9–10 Uhr, zum/nach Frühstück',
+    bg: '#FFF8E8',
+    warning: { type: 'red', text: '⚠️ Niemals nüchtern · Mind. 6h Abstand · Kein Alkohol' },
+    items: [
+      { id: 'no1', name: 'Novalgin 500mg × 2', detail: 'Zum Essen oder danach – nie auf leeren Magen', badge: 'red', badgeText: 'Schmerzmittel' },
+    ]
+  },
+  {
+    id: 'mittag',
+    icon: '🥗',
+    title: 'Mittagessen',
+    time: 'ca. 12–13 Uhr',
+    bg: '#F0F7FF',
+    items: [
+      { id: 'mi1', name: 'Omega-3 Fischöl', detail: '2–3 Kapseln – Entzündung senken, Acne Inversa, Knöchel' },
+      { id: 'mi2', name: 'Zink 25mg (2/3)', detail: '1 Tablette zum Mittagessen' },
+    ],
+    meal: { color: '#6A8DB5', label: 'Mittagsoptionen', items: ['Hähnchen + viel Salat + Olivenöl', 'Lachs + gedünstetes Gemüse', 'Hülsenfrüchte + Gemüse', 'Eier + Champignons + Paprika'], tip: 'Kein Weißbrot, kein Zucker – gut für Acne Inversa & Metformin-Wirkung' }
+  },
+  {
+    id: 'novalgin2',
+    icon: '💊',
+    title: 'Novalgin – 2. Einnahme',
+    time: 'ca. 15–16 Uhr (mind. 6h nach Einnahme 1)',
+    bg: '#F5F0FF',
+    warning: { type: 'red', text: '⚠️ Mind. 6h Abstand zur vorherigen Einnahme' },
+    items: [
+      { id: 'no2', name: 'Novalgin 500mg × 2', detail: 'Mit kleinem Snack – nicht nüchtern', badge: 'red', badgeText: 'Schmerzmittel' },
+    ]
+  },
+  {
+    id: 'abend',
+    icon: '🍽️',
+    title: 'Abendessen (Hauptmahlzeit)',
+    time: 'ca. 18–19 Uhr',
+    bg: '#F0FFF4',
+    items: [
+      { id: 'ab1', name: 'Metformin 500mg – 2. Einnahme', detail: 'Zum Abendessen – mit großem Glas Wasser', badge: 'blue', badgeText: 'Metformin' },
+      { id: 'ab2', name: 'Zink 25mg (3/3)', detail: '1 Tablette zum Abendessen – 75mg Tagesdosis komplett' },
+      { id: 'ab3', name: 'Probiotikum', detail: '1 Kapsel – Mikrobiom, Acne Inversa, Darmheilung' },
+    ],
+    meal: { color: '#6B8F71', label: 'Abendessen-Prinzip', items: ['Viel Protein: Fleisch, Fisch, Eier', 'Viel Gemüse: gedünstet oder roh', 'Wenig Kohlenhydrate – kein Brot', 'Kein Zucker – wichtig bei Acne Inversa'], tip: 'Metformin wirkt besser wenn Kohlenhydrate reduziert sind' }
+  },
+  {
+    id: 'novalgin3',
+    icon: '💊',
+    title: 'Novalgin – 3. Einnahme',
+    time: 'ca. 21 Uhr (mind. 6h nach Einnahme 2)',
+    bg: '#F0F4FF',
+    warning: { type: 'red', text: '⚠️ Mind. 6h Abstand · Nicht zu kurz vor dem Schlafen' },
+    items: [
+      { id: 'no3', name: 'Novalgin 500mg × 2', detail: 'Zum Abendessen oder danach', badge: 'red', badgeText: 'Schmerzmittel' },
+    ]
+  },
+  {
+    id: 'nacht',
+    icon: '🌙',
+    title: 'Abends / Vor dem Schlafen',
+    time: 'ca. 21–22 Uhr',
+    bg: '#F0F4FF',
+    items: [
+      { id: 'na1', name: 'Magnesium Bisglycinat', detail: '2 Kapseln – Schlaf, Cortisol, Nachtschweiß' },
+      { id: 'na2', name: 'Ashwagandha KSM-66', detail: '2 Tabletten – Cortisol senken, Stressresistenz' },
+    ],
+    warning: { type: 'blue', text: '💡 Berberin pausiert bis Endokrinologe · Zyklositol ab Woche 10 (Juni)' }
+  }
+];
+
+function getAllItems() { return plan.flatMap(b => b.items); }
+
+function updateProgress() {
+  const all = getAllItems();
+  const done = all.filter(i => state[i.id]).length;
+  const pct = all.length > 0 ? Math.round((done / all.length) * 100) : 0;
+  document.getElementById('progressFill').style.width = pct + '%';
+  document.getElementById('progressText').textContent = done + ' / ' + all.length + ' erledigt';
+}
+
+function toggleItem(id) {
+  state[id] = !state[id];
+  saveState();
+  const el = document.querySelector('[data-id="' + id + '"]');
+  if (el) el.classList.toggle('done', state[id]);
+  updateProgress();
+}
+
+function renderBlock(block) {
+  const itemsHtml = block.items.map(item => `
+    <div class="item ${state[item.id] ? 'done' : ''}" data-id="${item.id}" onclick="toggleItem('${item.id}')">
+      <div class="checkbox"><span class="checkbox-check">✓</span></div>
+      <div class="item-body">
+        <div class="item-name">${item.name}</div>
+        <div class="item-detail">${item.detail}</div>
+      </div>
+      ${item.badge ? `<span class="badge badge-${item.badge}">${item.badgeText}</span>` : ''}
+    </div>
+  `).join('');
+
+  const warningHtml = block.warning ? `
+    <div class="warning-box warning-${block.warning.type}">${block.warning.text}</div>
+  ` : '';
+
+  const mealHtml = block.meal ? `
+    <div class="meal-wrap">
+      <div class="meal-inner" style="background:${block.meal.color}15; border-left: 3px solid ${block.meal.color}">
+        <div class="meal-label" style="color:${block.meal.color}">${block.meal.label}</div>
+        ${block.meal.items.map(i => `
+          <div class="meal-item">
+            <div class="meal-dot" style="background:${block.meal.color}"></div>
+            <span>${i}</span>
+          </div>`).join('')}
+        <div class="meal-tip">${block.meal.tip}</div>
+      </div>
+    </div>
+  ` : '';
+
+  return `
+    <div class="block">
+      <div class="block-header">
+        <div class="block-icon" style="background:${block.bg}">${block.icon}</div>
+        <div>
+          <div class="block-title">${block.title}</div>
+          <div class="block-time">${block.time}</div>
+        </div>
+      </div>
+      ${warningHtml}
+      ${itemsHtml}
+      ${mealHtml}
+    </div>
+  `;
+}
+
+function render() {
+  const date = new Date();
+  document.getElementById('dateDisplay').textContent = date.toLocaleDateString('de-DE', { weekday: 'long', day: 'numeric', month: 'long' });
+
+  document.getElementById('app').innerHTML = `
+    <div class="hinweis">
+      <strong>Tippe</strong> auf eine Aufgabe zum Abhaken · Setzt sich täglich automatisch zurück
+    </div>
+    ${plan.map(renderBlock).join('')}
+    <div class="reset-wrap">
+      <button class="reset-btn" onclick="resetDay()">🔄 Tag zurücksetzen</button>
+    </div>
+  `;
+  updateProgress();
+}
+
+function resetDay() { state = {}; saveState(); render(); }
+render();
+</script>
+</body>
+</html>
